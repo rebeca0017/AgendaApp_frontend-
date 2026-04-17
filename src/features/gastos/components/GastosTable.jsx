@@ -1,10 +1,18 @@
+import { useMemo, useState } from 'react'
+import { PaginationControls } from '../../../components/common/PaginationControls'
 import { TablePanel } from '../../../components/common/TablePanel'
 import { dateTime, money } from '../../../utils/formatters'
 
+const PAGE_SIZE = 8
+
 export function GastosTable({ gastos, gastosSuperanIngresos, viewGasto, editGasto, deleteGasto, saving }) {
+  const [page, setPage] = useState(1)
+  const pageCount = Math.max(1, Math.ceil(gastos.length / PAGE_SIZE))
+  const visibleGastos = useMemo(() => gastos.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), [gastos, page])
+
   return (
     <TablePanel title="Ultimos gastos" columns={['Concepto', 'Categoria', 'Monto', 'Fecha', 'Acciones']}>
-      {gastos.slice(0, 8).map((gasto) => (
+      {visibleGastos.map((gasto) => (
         <tr key={gasto.id}>
           <td>{gasto.concepto}</td>
           <td>{gasto.categoria}</td>
@@ -19,6 +27,7 @@ export function GastosTable({ gastos, gastosSuperanIngresos, viewGasto, editGast
           </td>
         </tr>
       ))}
+      <tr className="table-pagination-row"><td colSpan="5"><PaginationControls page={Math.min(page, pageCount)} pageCount={pageCount} onPageChange={setPage} /></td></tr>
     </TablePanel>
   )
 }

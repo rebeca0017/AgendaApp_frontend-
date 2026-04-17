@@ -1,11 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { API_URL, emptyCredenciales, emptyRecuperarPassword } from '../constants/appConstants'
+import { apiRequest } from '../services/apiClient'
 import { clearAuth, persistAuth, readAuth, readProfileImage } from '../services/authStorage'
-import { formatApiError } from '../utils/apiErrors'
 
 const emptyEditing = { cliente: null, servicio: null, cita: null, ingreso: null, gasto: null }
 const emptyResumenIngresos = { total: 0, cantidad: 0, porMetodo: [] }
 const emptyResumenGastos = { total: 0, cantidad: 0, porCategoria: [] }
+const validTabs = ['agenda', 'clientes', 'servicios', 'ingresos', 'gastos', 'reportes', 'configuracion']
+
+function readTabFromPath() {
+  const tab = window.location.pathname.replace('/', '') || 'agenda'
+  return validTabs.includes(tab) ? tab : 'agenda'
+}
 
 export function useAgendaApp() {
   const [auth, setAuth] = useState(readAuth)
@@ -21,7 +27,7 @@ export function useAgendaApp() {
   const [resumenGastos, setResumenGastos] = useState(emptyResumenGastos)
   const [editing, setEditing] = useState(emptyEditing)
   const [search, setSearch] = useState({ clientes: '', citas: '' })
-  const [activeTab, setActiveTab] = useState('agenda')
+  const [activeTab, setActiveTabState] = useState(readTabFromPath)
   const [loading, setLoading] = useState(Boolean(auth.token))
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
@@ -39,28 +45,11 @@ export function useAgendaApp() {
   }, [])
 
   const request = useCallback(async (path, options = {}) => {
-    const headers = { 'Content-Type': 'application/json', ...options.headers }
-
-    if (auth.token) {
-      headers.Authorization = `Bearer ${auth.token}`
-    }
-
-    const response = await fetch(`${API_URL}${path}`, {
+    return apiRequest(path, {
       ...options,
-      headers,
+      token: auth.token,
+      onUnauthorized: () => clearAuth(setAuth),
     })
-
-    if (response.status === 401) {
-      clearAuth(setAuth)
-      throw new Error('Tu sesion expiro. Inicia sesion nuevamente.')
-    }
-
-    if (!response.ok) {
-      const text = await response.text()
-      throw new Error(formatApiError(text, response.status))
-    }
-
-    return response.status === 204 ? null : response.json()
   }, [auth.token])
 
   const loadData = useCallback(async () => {
@@ -100,6 +89,24 @@ export function useAgendaApp() {
   useEffect(() => {
     loadData()
   }, [loadData])
+
+  useEffect(() => {
+    function onPopState() {
+      setActiveTabState(readTabFromPath())
+    }
+
+    window.addEventListener('popstate', onPopState)
+    return () => window.removeEventListener('popstate', onPopState)
+  }, [])
+
+  function setActiveTab(tab) {
+    setActiveTabState(tab)
+
+    const nextPath = `/${tab}`
+    if (window.location.pathname !== nextPath) {
+      window.history.pushState({}, '', nextPath)
+    }
+  }
 
   async function saveAction(action) {
     setSaving(true)
@@ -149,7 +156,24 @@ export function useAgendaApp() {
         return
       }
 
-      const response = await request(authMode === 'login' ? '/api/usuarios/login' : '/api/usuarios/registrar', {
+      if (authMode === 'registro') {
+        await request('/api/usuarios/registrar', {
+          method: 'POST',
+          body: JSON.stringify({
+            nombre: credenciales.nombre.trim(),
+            apellido: credenciales.apellido.trim(),
+            user: credenciales.user.trim(),
+            pass: credenciales.pass.trim(),
+          }),
+        })
+
+        setCredenciales(emptyCredenciales)
+        setAuthMode('login')
+        setMessage('Usuario creado. Inicia sesion con tus credenciales.')
+        return
+      }
+
+      const response = await request('/api/usuarios/login', {
         method: 'POST',
         body: JSON.stringify({
           nombre: credenciales.nombre.trim(),
@@ -176,7 +200,7 @@ export function useAgendaApp() {
         return
       }
 
-      setMessage(authMode === 'login' ? 'Sesion iniciada.' : 'Usuario creado y sesion iniciada.')
+      setMessage('Sesion iniciada.')
     })
   }
 

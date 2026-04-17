@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import heroImg from '../../assets/hero.png'
-import { API_URL } from '../../constants/appConstants'
+import { apiRequest } from '../../services/apiClient'
 import { saveAppBrand } from '../../services/appBrandStorage'
 
 export function AdminDashboard({ auth, appName, logo, setBrand, logout }) {
@@ -10,10 +10,12 @@ export function AdminDashboard({ auth, appName, logo, setBrand, logout }) {
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const [removerAdmin, setRemoverAdmin] = useState({ usuario: null, passwordActual: '' })
 
   const usuariosNormalizados = useMemo(() => usuarios.map((usuario) => ({
     ...usuario,
-    esAdmin: Boolean(usuario.esAdmin) || usuario.email?.toLowerCase() === auth.email?.toLowerCase(),
+    esAdmin: Boolean(usuario.esAdmin),
+    esSesionActual: usuario.email?.toLowerCase() === auth.email?.toLowerCase(),
   })), [auth.email, usuarios])
 
   const stats = useMemo(() => ({
@@ -34,19 +36,7 @@ export function AdminDashboard({ auth, appName, logo, setBrand, logout }) {
       setError('')
 
       try {
-        const response = await fetch(`${API_URL}/api/usuarios/admin/usuarios`, {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${auth.token}`,
-          },
-        })
-
-        if (!response.ok) {
-          const text = await response.text()
-          throw new Error(text || 'No se pudo cargar los usuarios.')
-        }
-
-        const data = await response.json()
+        const data = await apiRequest('/api/usuarios/admin/usuarios', { token: auth.token })
         if (activo) setUsuarios(data)
       } catch (err) {
         if (activo) setError(err.message)
@@ -63,21 +53,7 @@ export function AdminDashboard({ auth, appName, logo, setBrand, logout }) {
   }, [auth.token])
 
   async function request(path, options = {}) {
-    const response = await fetch(`${API_URL}${path}`, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${auth.token}`,
-        ...options.headers,
-      },
-    })
-
-    if (!response.ok) {
-      const text = await response.text()
-      throw new Error(text || 'No se pudo completar la accion.')
-    }
-
-    return response.status === 204 ? null : response.json()
+    return apiRequest(path, { ...options, token: auth.token })
   }
 
   async function runAction(action) {
@@ -122,6 +98,49 @@ export function AdminDashboard({ auth, appName, logo, setBrand, logout }) {
     })
   }
 
+  async function hacerAdmin(usuario) {
+    await runAction(async () => {
+      await request('/api/usuarios/admin/haceradmin', {
+        method: 'POST',
+        body: JSON.stringify({ email: usuario.email }),
+      })
+      const data = await request('/api/usuarios/admin/usuarios')
+      setUsuarios(data)
+      setMessage('Usuario convertido en administrador.')
+    })
+  }
+
+  function solicitarRemoverAdmin(usuario) {
+    setError('')
+    setMessage('')
+    setRemoverAdmin({ usuario, passwordActual: '' })
+  }
+
+  function cerrarRemoverAdmin() {
+    if (saving) return
+    setRemoverAdmin({ usuario: null, passwordActual: '' })
+  }
+
+  async function confirmarRemoverAdmin(event) {
+    event.preventDefault()
+    const usuario = removerAdmin.usuario
+    if (!usuario) return
+
+    await runAction(async () => {
+      await request('/api/usuarios/admin/removeradmin', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: usuario.email,
+          passwordActual: removerAdmin.passwordActual,
+        }),
+      })
+      const data = await request('/api/usuarios/admin/usuarios')
+      setUsuarios(data)
+      setMessage('Rol administrador removido.')
+      setRemoverAdmin({ usuario: null, passwordActual: '' })
+    })
+  }
+
   function cambiarLogo(event) {
     const file = event.target.files?.[0]
     event.target.value = ''
@@ -151,9 +170,20 @@ export function AdminDashboard({ auth, appName, logo, setBrand, logout }) {
       logo: brandDraft.logo,
     }
 
-    saveAppBrand(nextBrand)
-    setBrand(nextBrand)
-    setMessage('Informacion general actualizada.')
+    runAction(async () => {
+      const response = await request('/api/configuracion-app', {
+        method: 'PUT',
+        body: JSON.stringify({
+          nombreApp: nextBrand.appName,
+          logo: nextBrand.logo,
+        }),
+      })
+
+      const savedBrand = { appName: response.nombreApp, logo: response.logo || '' }
+      saveAppBrand(savedBrand)
+      setBrand(savedBrand)
+      setMessage('Informacion general actualizada.')
+    })
   }
 
   return (
@@ -227,10 +257,20 @@ export function AdminDashboard({ auth, appName, logo, setBrand, logout }) {
               <p>No hay usuarios para mostrar.</p>
             ) : (
               usuariosNormalizados.map((usuario) => (
-                <button type="button" key={usuario.id} className="admin-user-row" onClick={() => setAdminEmail(usuario.email)}>
-                  <span>{usuario.email}</span>
-                  <small>{usuario.esAdmin ? 'Admin' : 'Usuario'}</small>
-                </button>
+                <div key={usuario.id} className="admin-user-row">
+                  <button type="button" className="admin-user-select" onClick={() => setAdminEmail(usuario.email)}>
+                    <span>{usuario.email}</span>
+                    <small>{usuario.esAdmin ? 'Admin' : 'Usuario'}</small>
+                  </button>
+                  <button
+                    type="button"
+                    className={usuario.esAdmin ? 'secondary' : 'primary'}
+                    onClick={() => (usuario.esAdmin ? solicitarRemoverAdmin(usuario) : hacerAdmin(usuario))}
+                    disabled={saving || usuario.esSesionActual}
+                  >
+                    {usuario.esAdmin ? 'Quitar admin' : 'Hacer admin'}
+                  </button>
+                </div>
               ))
             )}
           </div>
@@ -239,6 +279,37 @@ export function AdminDashboard({ auth, appName, logo, setBrand, logout }) {
 
       {message && <p className="notice success">{message}</p>}
       {error && <p className="notice error">{error}</p>}
+
+      {removerAdmin.usuario && (
+        <div className="modal-backdrop" role="presentation">
+          <form className="reason-modal" onSubmit={confirmarRemoverAdmin}>
+            <div className="detail-modal-header">
+              <div>
+                <p>Confirmar seguridad</p>
+                <h3>Quitar admin</h3>
+              </div>
+              <button type="button" className="modal-close" onClick={cerrarRemoverAdmin} aria-label="Cerrar">x</button>
+            </div>
+            <p>Escribe tu contrasena para quitar el rol admin de {removerAdmin.usuario.email}.</p>
+            <label>
+              Contrasena actual
+              <input
+                required
+                autoFocus
+                type="password"
+                value={removerAdmin.passwordActual}
+                onChange={(event) => setRemoverAdmin((current) => ({ ...current, passwordActual: event.target.value }))}
+              />
+            </label>
+            <div className="modal-actions">
+              <button type="button" className="secondary modal-submit" onClick={cerrarRemoverAdmin} disabled={saving}>Cancelar</button>
+              <button type="submit" className="ghost modal-submit" disabled={saving}>
+                {saving ? 'Validando...' : 'Quitar admin'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </main>
   )
 }

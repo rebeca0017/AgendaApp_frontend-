@@ -30,6 +30,7 @@ export function ClientesTab() {
       {clientes.selectedCliente && (
         <ClienteDetailModal
           cliente={clientes.selectedCliente}
+          historialFinanciero={clientes.historialFinanciero}
           onClose={clientes.closeClienteDetail}
           saving={clientes.saving}
         />

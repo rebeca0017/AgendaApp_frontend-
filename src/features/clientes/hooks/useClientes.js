@@ -52,6 +52,7 @@ export function useClientes() {
   } = useAgendaContext()
   const [clienteForm, setClienteForm] = useState(emptyCliente)
   const [selectedCliente, setSelectedCliente] = useState(null)
+  const [historialFinanciero, setHistorialFinanciero] = useState(null)
 
   const clientesActivos = useMemo(() => clientes.filter((cliente) => cliente.activo), [clientes])
   const errorIdentificacion = useMemo(() => validarCedulaEcuatoriana(clienteForm.identificacion), [clienteForm.identificacion])
@@ -119,15 +120,29 @@ export function useClientes() {
     setEditing((current) => ({ ...current, cliente: null }))
   }
 
+  async function viewCliente(cliente) {
+    setSelectedCliente(cliente)
+    setHistorialFinanciero(null)
+
+    await saveAction(async () => {
+      const historial = await request(`/api/reportes/clientes/${cliente.id}/historial-financiero`)
+      setHistorialFinanciero(historial)
+    })
+  }
+
   return {
     cambiarEstadoCliente,
     clienteForm,
     clientesActivos,
     clientesFiltrados,
-    closeClienteDetail: () => setSelectedCliente(null),
+    closeClienteDetail: () => {
+      setSelectedCliente(null)
+      setHistorialFinanciero(null)
+    },
     deleteCliente: (cliente) => deleteCliente(deleteEntity, cliente),
     editCliente,
     editing,
+    historialFinanciero,
     mensajeIdentificacion,
     resetCliente,
     saving,
@@ -136,6 +151,6 @@ export function useClientes() {
     setClienteForm,
     setSearch,
     submitCliente,
-    viewCliente: setSelectedCliente,
+    viewCliente,
   }
 }

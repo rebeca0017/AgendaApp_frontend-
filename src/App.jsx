@@ -9,9 +9,11 @@ import { ClientesTab } from './features/clientes/ClientesTab'
 import { ConfigurationTab } from './features/configuration/ConfigurationTab'
 import { GastosTab } from './features/gastos/GastosTab'
 import { IngresosTab } from './features/ingresos/IngresosTab'
+import { ReportesTab } from './features/reportes/ReportesTab'
 import { ServiciosTab } from './features/servicios/ServiciosTab'
 import { useAgendaApp } from './hooks/useAgendaApp'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { apiRequest } from './services/apiClient'
 import { readAppBrand } from './services/appBrandStorage'
 import cerrarSesionIcon from './assets/sidebar/cerrar-sesion.png'
 import configuracionIcon from './assets/sidebar/configuracion.png'
@@ -21,6 +23,12 @@ function App() {
   const app = useAgendaApp()
   const [brand, setBrand] = useState(readAppBrand)
   const nombreSesion = `${app.auth.nombre ?? ''} ${app.auth.apellido ?? ''}`.trim() || app.auth.email
+
+  useEffect(() => {
+    apiRequest('/api/configuracion-app')
+      .then((config) => setBrand({ appName: config.nombreApp, logo: config.logo || '' }))
+      .catch(() => {})
+  }, [])
 
   if (!app.auth.token) {
     return (
@@ -93,13 +101,15 @@ function App() {
       <section className="app-shell">
         <AppHeader authEmail={nombreSesion} appName={brand.appName} logo={brand.logo} />
 
-        <MetricsBar
-          clientesActivos={app.metrics.clientesActivos}
-          serviciosActivos={app.metrics.serviciosActivos}
-          citasCompletadas={app.metrics.citasCompletadas}
-          totalIngresos={app.resumen.total}
-          totalGastos={app.resumenGastos.total}
-        />
+        {app.activeTab !== 'reportes' && (
+          <MetricsBar
+            clientesActivos={app.metrics.clientesActivos}
+            serviciosActivos={app.metrics.serviciosActivos}
+            citasCompletadas={app.metrics.citasCompletadas}
+            totalIngresos={app.resumen.total}
+            totalGastos={app.resumenGastos.total}
+          />
+        )}
 
         <AgendaAppProvider value={app.contextValue}>
         <section className="workspace">
@@ -118,6 +128,8 @@ function App() {
         {app.activeTab === 'ingresos' && <IngresosTab />}
 
         {app.activeTab === 'gastos' && <GastosTab />}
+
+        {app.activeTab === 'reportes' && <ReportesTab />}
       </section>
       </AgendaAppProvider>
       </section>

@@ -18,6 +18,7 @@ export function IngresosTab() {
         saving={ingresos.saving}
         clientesActivos={ingresos.clientesActivos}
         citasDisponiblesParaIngreso={ingresos.citasDisponiblesParaIngreso}
+        saldoCitaSeleccionada={ingresos.saldoCitaSeleccionada}
       />
 
       <div className="stack">

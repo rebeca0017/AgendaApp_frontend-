@@ -1,5 +1,9 @@
+import { useMemo, useState } from 'react'
 import { DataPanel } from '../../../components/common/DataPanel'
+import { PaginationControls } from '../../../components/common/PaginationControls'
 import { SearchBox } from '../../../components/common/SearchBox'
+
+const PAGE_SIZE = 8
 
 export function ClientesTable({
   search,
@@ -11,6 +15,10 @@ export function ClientesTable({
   deleteCliente,
   saving,
 }) {
+  const [page, setPage] = useState(1)
+  const pageCount = Math.max(1, Math.ceil(clientesFiltrados.length / PAGE_SIZE))
+  const visibleClientes = useMemo(() => clientesFiltrados.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), [clientesFiltrados, page])
+
   return (
     <DataPanel title="Clientes">
       <SearchBox value={search.clientes} onChange={(value) => setSearch({ ...search, clientes: value })} placeholder="Buscar por nombre o identificacion" />
@@ -25,7 +33,7 @@ export function ClientesTable({
             </tr>
           </thead>
           <tbody>
-            {clientesFiltrados.map((cliente) => (
+            {visibleClientes.map((cliente) => (
               <tr key={cliente.id}>
                 <td>{cliente.nombres} {cliente.apellidos}</td>
                 <td>{cliente.email || cliente.telefono || 'Sin contacto'}</td>
@@ -43,6 +51,7 @@ export function ClientesTable({
           </tbody>
         </table>
       </div>
+      <PaginationControls page={Math.min(page, pageCount)} pageCount={pageCount} onPageChange={setPage} />
     </DataPanel>
   )
 }

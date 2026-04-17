@@ -3,6 +3,7 @@ import clientesIcon from '../../assets/sidebar/clientes.png'
 import gastosIcon from '../../assets/sidebar/gastos.png'
 import ingresosIcon from '../../assets/sidebar/ingresos.png'
 import serviciosIcon from '../../assets/sidebar/servicios.png'
+import reportesIcon from '../../assets/metrics/ingresos.png'
 
 const tabs = [
   { id: 'agenda', label: 'Agenda', icon: agendaIcon },
@@ -10,6 +11,7 @@ const tabs = [
   { id: 'servicios', label: 'Servicios', icon: serviciosIcon },
   { id: 'ingresos', label: 'Ingresos', icon: ingresosIcon },
   { id: 'gastos', label: 'Gastos', icon: gastosIcon },
+  { id: 'reportes', label: 'Reportes', icon: reportesIcon },
 ]
 
 export function TabsNav({ activeTab, onChange }) {

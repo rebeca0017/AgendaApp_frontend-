@@ -56,6 +56,11 @@
   font-size: 14px;
 }
 
+.auth-panel .auth-help {
+  text-align: left;
+  line-height: 1.45;
+}
+
 /* FORMULARIO */
 .auth-form {
   display: grid;

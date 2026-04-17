@@ -1,0 +1,48 @@
+import { dateTime } from '../../../utils/formatters'
+
+export function ClienteDetailModal({ cliente, onClose, saving }) {
+  return (
+    <div className="modal-backdrop" role="presentation">
+      <article className="detail-modal" role="dialog" aria-modal="true" aria-labelledby="cliente-detail-title">
+        <div className="detail-modal-header">
+          <div>
+            <p>Detalle de cliente</p>
+            <h3 id="cliente-detail-title">{cliente.nombres} {cliente.apellidos}</h3>
+          </div>
+          <button type="button" className="modal-close" onClick={onClose} disabled={saving} aria-label="Cerrar">x</button>
+        </div>
+
+        <div className="detail-status-row">
+          <span className={`status-pill ${cliente.activo ? 'status-pill-completed' : 'status-pill-muted'}`}>{cliente.activo ? 'Activo' : 'Inactivo'}</span>
+        </div>
+
+        <dl className="detail-grid">
+          <div>
+            <dt>Nombres</dt>
+            <dd>{cliente.nombres}</dd>
+          </div>
+          <div>
+            <dt>Apellidos</dt>
+            <dd>{cliente.apellidos}</dd>
+          </div>
+          <div>
+            <dt>Identificación</dt>
+            <dd>{cliente.identificacion || 'Sin identificacion.'}</dd>
+          </div>
+          <div>
+            <dt>Telefono</dt>
+            <dd>{cliente.telefono || 'Sin telefono.'}</dd>
+          </div>
+          <div>
+            <dt>Email</dt>
+            <dd>{cliente.email || 'Sin email.'}</dd>
+          </div>
+          <div>
+            <dt>Fecha de creación</dt>
+            <dd>{cliente.fechaCreacion ? dateTime(cliente.fechaCreacion) : 'Sin fecha registrada.'}</dd>
+          </div>
+        </dl>
+      </article>
+    </div>
+  )
+}

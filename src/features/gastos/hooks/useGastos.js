@@ -14,6 +14,7 @@ export function useGastos() {
     ui: { saving },
   } = useAgendaContext()
   const [gastoForm, setGastoForm] = useState(emptyGasto)
+  const [selectedGasto, setSelectedGasto] = useState(null)
   const gastosSuperanIngresos = resumenGastos.total > resumen.total
 
   async function submitGasto(event) {
@@ -28,6 +29,7 @@ export function useGastos() {
   }
 
   function editGasto(gasto) {
+    setSelectedGasto(null)
     setGastoForm({
       concepto: gasto.concepto,
       categoria: gasto.categoria,
@@ -47,6 +49,7 @@ export function useGastos() {
   }
 
   return {
+    closeGastoDetail: () => setSelectedGasto(null),
     deleteGasto: (gasto) => deleteGasto(deleteEntity, gasto),
     editGasto,
     editing,
@@ -56,7 +59,9 @@ export function useGastos() {
     resetGasto,
     resumenGastos,
     saving,
+    selectedGasto,
     setGastoForm,
     submitGasto,
+    viewGasto: setSelectedGasto,
   }
 }

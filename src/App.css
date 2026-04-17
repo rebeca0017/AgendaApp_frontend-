@@ -1,5 +1,6 @@
 @import './styles/layout.css';
 @import './styles/auth.css';
+@import './styles/admin.css';
 @import './styles/common.css';
 @import './features/agenda/styles/agenda.css';
 @import './features/configuration/styles/configuration.css';

@@ -1,3 +1,4 @@
+import { AdminUsersPanel } from './components/AdminUsersPanel'
 import { PasswordForm } from './components/PasswordForm'
 import { ProfileImagePanel } from './components/ProfileImagePanel'
 import { UserForm } from './components/UserForm'
@@ -5,6 +6,22 @@ import { useUserSettings } from './hooks/useUserSettings'
 
 export function ConfigurationTab() {
   const config = useUserSettings()
+
+  if (config.esAdmin) {
+    return (
+      <div className="configuration-tab">
+        <AdminUsersPanel
+          adminEmail={config.adminEmail}
+          setAdminEmail={config.setAdminEmail}
+          submitEnviarRecuperacionAdmin={config.submitEnviarRecuperacionAdmin}
+          submitPasswordTemporalAdmin={config.submitPasswordTemporalAdmin}
+          usuariosAdmin={config.usuariosAdmin}
+          cargarUsuariosAdmin={config.cargarUsuariosAdmin}
+          saving={config.saving}
+        />
+      </div>
+    )
+  }
 
   return (
     <div className="grid two-columns configuration-tab">

@@ -14,8 +14,32 @@ export function useIngresos() {
     ui: { saving },
   } = useAgendaContext()
   const [ingresoForm, setIngresoForm] = useState(emptyIngreso)
+  const [selectedIngreso, setSelectedIngreso] = useState(null)
   const clientesActivos = clientes.filter((cliente) => cliente.activo)
-  const citasDisponiblesParaIngreso = citas.filter((cita) => !['Cancelada', 'NoAsistio'].includes(cita.estado))
+  const citasDisponiblesParaIngreso = citas.filter((cita) => (
+    ['Confirmada', 'Completada'].includes(cita.estado)
+    && (!ingresoForm.clienteId || String(cita.clienteId) === String(ingresoForm.clienteId))
+  ))
+
+  function actualizarIngresoForm(cambios) {
+    setIngresoForm((actual) => {
+      const siguiente = { ...actual, ...cambios }
+
+      if (
+        Object.prototype.hasOwnProperty.call(cambios, 'clienteId')
+        && siguiente.citaId
+        && !citas.some((cita) => (
+          String(cita.id) === String(siguiente.citaId)
+          && String(cita.clienteId) === String(siguiente.clienteId)
+          && ['Confirmada', 'Completada'].includes(cita.estado)
+        ))
+      ) {
+        siguiente.citaId = ''
+      }
+
+      return siguiente
+    })
+  }
 
   async function submitIngreso(event) {
     event.preventDefault()
@@ -29,7 +53,8 @@ export function useIngresos() {
   }
 
   function editIngreso(ingreso) {
-    setIngresoForm({
+    setSelectedIngreso(null)
+    actualizarIngresoForm({
       citaId: ingreso.citaId ? String(ingreso.citaId) : '',
       clienteId: ingreso.clienteId ? String(ingreso.clienteId) : '',
       concepto: ingreso.concepto,
@@ -49,6 +74,7 @@ export function useIngresos() {
   }
 
   return {
+    closeIngresoDetail: () => setSelectedIngreso(null),
     citasDisponiblesParaIngreso,
     clientesActivos,
     deleteIngreso: (ingreso) => deleteIngreso(deleteEntity, ingreso),
@@ -59,7 +85,9 @@ export function useIngresos() {
     resetIngreso,
     resumen,
     saving,
-    setIngresoForm,
+    setIngresoForm: actualizarIngresoForm,
     submitIngreso,
+    selectedIngreso,
+    viewIngreso: setSelectedIngreso,
   }
 }

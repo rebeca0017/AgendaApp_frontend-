@@ -1,8 +1,14 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useAgendaContext } from '../../../context/useAgendaContext'
 import { emptyCambioPassword, emptyModificarUsuario } from '../../../constants/appConstants'
 import { persistAuth, removeProfileImage, saveProfileImage } from '../../../services/authStorage'
-import { cambiarPassword, modificarUsuario as modificarUsuarioApi } from '../services/userSettingsApi'
+import {
+  cambiarPassword,
+  enviarRecuperacionPasswordAdmin,
+  generarPasswordTemporalAdmin,
+  listarUsuariosAdmin,
+  modificarUsuario as modificarUsuarioApi,
+} from '../services/userSettingsApi'
 
 export function useUserSettings() {
   const {
@@ -13,6 +19,23 @@ export function useUserSettings() {
   } = useAgendaContext()
   const [cambioPassword, setCambioPassword] = useState(emptyCambioPassword)
   const [modificarUsuarioDraft, setModificarUsuario] = useState(emptyModificarUsuario)
+  const [usuariosAdmin, setUsuariosAdmin] = useState([])
+  const [adminEmail, setAdminEmail] = useState('')
+
+  useEffect(() => {
+    if (!auth.esAdmin) return
+
+    let activo = true
+    request('/api/usuarios/admin/usuarios')
+      .then((usuarios) => {
+        if (activo) setUsuariosAdmin(usuarios)
+      })
+      .catch((err) => setError(err.message))
+
+    return () => {
+      activo = false
+    }
+  }, [auth.esAdmin, request, setError])
 
   const modificarUsuario = useMemo(() => ({
     nombre: modificarUsuarioDraft.nombre || auth.nombre || '',
@@ -26,6 +49,7 @@ export function useUserSettings() {
     await saveAction(async () => {
       await cambiarPassword(request, cambioPassword)
       setCambioPassword(emptyCambioPassword)
+      persistAuth(setAuth, { ...auth, debeCambiarPassword: false })
       setMessage('Contrasena actualizada.')
     })
   }
@@ -40,6 +64,8 @@ export function useUserSettings() {
         email: response.email ?? modificarUsuario.nuevoEmail.trim(),
         nombre: response.nombre ?? modificarUsuario.nombre.trim(),
         apellido: response.apellido ?? modificarUsuario.apellido.trim(),
+        esAdmin: Boolean(response.esAdmin),
+        debeCambiarPassword: Boolean(response.debeCambiarPassword),
         imagenPerfil: auth.imagenPerfil,
       })
       if (auth.imagenPerfil) {
@@ -84,17 +110,46 @@ export function useUserSettings() {
     setMessage('Imagen de perfil eliminada.')
   }
 
+  async function cargarUsuariosAdmin() {
+    const usuarios = await listarUsuariosAdmin(request)
+    setUsuariosAdmin(usuarios)
+  }
+
+  async function submitEnviarRecuperacionAdmin(event) {
+    event.preventDefault()
+    await saveAction(async () => {
+      await enviarRecuperacionPasswordAdmin(request, adminEmail)
+      setMessage('Correo de recuperacion enviado.')
+    })
+  }
+
+  async function submitPasswordTemporalAdmin(event) {
+    event.preventDefault()
+    await saveAction(async () => {
+      await generarPasswordTemporalAdmin(request, adminEmail)
+      setMessage('Clave temporal enviada. El usuario debera cambiarla al iniciar sesion.')
+    })
+  }
+
   return {
     actualizarImagenPerfil,
+    adminEmail,
     authEmail: auth.email,
+    esAdmin: auth.esAdmin,
+    debeCambiarPassword: auth.debeCambiarPassword,
+    cargarUsuariosAdmin,
     cambioPassword,
     eliminarImagenPerfil,
     imagenPerfil: auth.imagenPerfil,
     modificarUsuario,
     saving,
+    setAdminEmail,
     setCambioPassword,
     setModificarUsuario,
     submitCambiarPassword,
+    submitEnviarRecuperacionAdmin,
     submitModificarUsuario,
+    submitPasswordTemporalAdmin,
+    usuariosAdmin,
   }
 }

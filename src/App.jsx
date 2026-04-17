@@ -1,4 +1,5 @@
 import { AuthPage } from './components/auth/AuthPage'
+import { AdminDashboard } from './components/admin/AdminDashboard'
 import { AppHeader } from './components/layout/AppHeader'
 import { MetricsBar } from './components/layout/MetricsBar'
 import { TabsNav } from './components/layout/TabsNav'
@@ -10,17 +11,22 @@ import { GastosTab } from './features/gastos/GastosTab'
 import { IngresosTab } from './features/ingresos/IngresosTab'
 import { ServiciosTab } from './features/servicios/ServiciosTab'
 import { useAgendaApp } from './hooks/useAgendaApp'
+import { useState } from 'react'
+import { readAppBrand } from './services/appBrandStorage'
 import cerrarSesionIcon from './assets/sidebar/cerrar-sesion.png'
 import configuracionIcon from './assets/sidebar/configuracion.png'
 import './App.css'
 
 function App() {
   const app = useAgendaApp()
+  const [brand, setBrand] = useState(readAppBrand)
   const nombreSesion = `${app.auth.nombre ?? ''} ${app.auth.apellido ?? ''}`.trim() || app.auth.email
 
   if (!app.auth.token) {
     return (
       <AuthPage
+        appName={brand.appName}
+        logo={brand.logo}
         authMode={app.authMode}
         setAuthMode={app.setAuthMode}
         credenciales={app.credenciales}
@@ -31,6 +37,18 @@ function App() {
         saving={app.saving}
         message={app.message}
         error={app.error}
+      />
+    )
+  }
+
+  if (app.auth.esAdmin) {
+    return (
+      <AdminDashboard
+        auth={app.auth}
+        appName={brand.appName}
+        logo={brand.logo}
+        setBrand={setBrand}
+        logout={app.logout}
       />
     )
   }
@@ -46,7 +64,7 @@ function App() {
               app.auth.email.slice(0, 1).toUpperCase()
             )}
           </div>
-          <strong>Agenda y caja</strong>
+          <strong>{brand.appName}</strong>
           <span>{nombreSesion}</span>
         </div>
 
@@ -73,7 +91,7 @@ function App() {
       </aside>
 
       <section className="app-shell">
-        <AppHeader authEmail={nombreSesion} />
+        <AppHeader authEmail={nombreSesion} appName={brand.appName} logo={brand.logo} />
 
         <MetricsBar
           clientesActivos={app.metrics.clientesActivos}

@@ -27,6 +27,6 @@ export const emptyGasto = {
   notas: '',
 }
 export const emptyCredenciales = { nombre: '', apellido: '', user: '', pass: '' }
-export const emptyRecuperarPassword = { email: '', passwordNueva: '' }
+export const emptyRecuperarPassword = { email: '', token: '', passwordNueva: '' }
 export const emptyCambioPassword = { passwordActual: '', passwordNueva: '' }
 export const emptyModificarUsuario = { nombre: '', apellido: '', emailActual: '', nuevoEmail: '' }

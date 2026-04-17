@@ -1,3 +1,4 @@
+import { GastoDetailModal } from './components/GastoDetailModal'
 import { GastoForm } from './components/GastoForm'
 import { GastosSummary } from './components/GastosSummary'
 import { GastosTable } from './components/GastosTable'
@@ -22,11 +23,20 @@ export function GastosTab() {
         <GastosTable
           gastos={gastos.gastos}
           gastosSuperanIngresos={gastos.gastosSuperanIngresos}
+          viewGasto={gastos.viewGasto}
           editGasto={gastos.editGasto}
           deleteGasto={gastos.deleteGasto}
           saving={gastos.saving}
         />
       </div>
+
+      {gastos.selectedGasto && (
+        <GastoDetailModal
+          gasto={gastos.selectedGasto}
+          onClose={gastos.closeGastoDetail}
+          saving={gastos.saving}
+        />
+      )}
     </div>
   )
 }

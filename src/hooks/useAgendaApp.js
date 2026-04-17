@@ -27,6 +27,17 @@ export function useAgendaApp() {
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const email = params.get('email')
+    const token = params.get('token')
+
+    if (email && token) {
+      setRecuperarPassword({ email, token, passwordNueva: '' })
+      setAuthMode('restablecer')
+    }
+  }, [])
+
   const request = useCallback(async (path, options = {}) => {
     const headers = { 'Content-Type': 'application/json', ...options.headers }
 
@@ -108,17 +119,33 @@ export function useAgendaApp() {
     event.preventDefault()
     await saveAction(async () => {
       if (authMode === 'recuperar') {
+        await request('/api/usuarios/solicitarrecuperacionpassword', {
+          method: 'POST',
+          body: JSON.stringify({
+            email: recuperarPassword.email.trim(),
+          }),
+        })
+
+        setRecuperarPassword(emptyRecuperarPassword)
+        setAuthMode('login')
+        setMessage('Si el correo esta registrado, recibiras un enlace para restablecer tu clave.')
+        return
+      }
+
+      if (authMode === 'restablecer') {
         await request('/api/usuarios/recuperarpassword', {
           method: 'POST',
           body: JSON.stringify({
             email: recuperarPassword.email.trim(),
+            token: recuperarPassword.token,
             passwordNueva: recuperarPassword.passwordNueva.trim(),
           }),
         })
 
         setRecuperarPassword(emptyRecuperarPassword)
         setAuthMode('login')
-        setMessage('Contrasena actualizada. Inicia sesion con tu nueva contrasena.')
+        window.history.replaceState({}, document.title, window.location.pathname)
+        setMessage('Clave actualizada. Inicia sesion con tu nueva clave.')
         return
       }
 
@@ -138,9 +165,17 @@ export function useAgendaApp() {
         email: response.email ?? credenciales.user.trim(),
         nombre: response.nombre ?? credenciales.nombre.trim(),
         apellido: response.apellido ?? credenciales.apellido.trim(),
+        esAdmin: Boolean(response.esAdmin),
+        debeCambiarPassword: Boolean(response.debeCambiarPassword),
         imagenPerfil: readProfileImage(credenciales.user.trim()),
       })
       setCredenciales(emptyCredenciales)
+      if (response.debeCambiarPassword) {
+        setActiveTab('configuracion')
+        setMessage('Usa una clave nueva antes de continuar.')
+        return
+      }
+
       setMessage(authMode === 'login' ? 'Sesion iniciada.' : 'Usuario creado y sesion iniciada.')
     })
   }

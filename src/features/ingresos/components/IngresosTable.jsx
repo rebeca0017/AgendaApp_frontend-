@@ -1,7 +1,7 @@
 import { TablePanel } from '../../../components/common/TablePanel'
 import { dateTime, money } from '../../../utils/formatters'
 
-export function IngresosTable({ ingresos, editIngreso, deleteIngreso, saving }) {
+export function IngresosTable({ ingresos, editIngreso, viewIngreso, deleteIngreso, saving }) {
   return (
     <TablePanel title="Ultimos ingresos" columns={['Concepto', 'Monto', 'Fecha', 'Acciones']}>
       {ingresos.slice(0, 8).map((ingreso) => (
@@ -11,6 +11,7 @@ export function IngresosTable({ ingresos, editIngreso, deleteIngreso, saving }) 
           <td>{dateTime(ingreso.fechaPago)}</td>
           <td>
             <div className="table-actions">
+              <button className="secondary action-view" onClick={() => viewIngreso(ingreso)} disabled={saving}>Ver</button>
               <button className="secondary action-edit" onClick={() => editIngreso(ingreso)} disabled={saving}>Editar</button>
               <button className="ghost" onClick={() => deleteIngreso(ingreso)} disabled={saving}>Borrar</button>
             </div>

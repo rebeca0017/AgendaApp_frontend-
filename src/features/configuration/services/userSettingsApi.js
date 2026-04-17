@@ -19,3 +19,21 @@ export function modificarUsuario(request, usuario) {
     }),
   })
 }
+
+export function listarUsuariosAdmin(request) {
+  return request('/api/usuarios/admin/usuarios')
+}
+
+export function enviarRecuperacionPasswordAdmin(request, email) {
+  return request('/api/usuarios/admin/enviarrecuperacionpassword', {
+    method: 'POST',
+    body: JSON.stringify({ email: email.trim() }),
+  })
+}
+
+export function generarPasswordTemporalAdmin(request, email) {
+  return request('/api/usuarios/admin/generarpasswordtemporal', {
+    method: 'POST',
+    body: JSON.stringify({ email: email.trim() }),
+  })
+}

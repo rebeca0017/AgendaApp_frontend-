@@ -27,7 +27,7 @@ export function clearAuth(setAuth) {
 }
 
 function emptyAuth() {
-  return { token: '', email: '', nombre: '', apellido: '', expiracion: '', imagenPerfil: '' }
+  return { token: '', email: '', nombre: '', apellido: '', expiracion: '', imagenPerfil: '', esAdmin: false, debeCambiarPassword: false }
 }
 
 export function readProfileImage(email) {

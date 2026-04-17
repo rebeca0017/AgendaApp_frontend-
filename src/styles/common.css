@@ -24,9 +24,10 @@
 .metric {
   min-height: 108px;
   padding: clamp(16px, 1.2vw, 22px);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 58px;
+  align-items: center;
+  gap: 14px;
 }
 
 .metric span {
@@ -36,11 +37,20 @@
 }
 
 .metric strong {
+  display: block;
+  margin-top: 14px;
   color: var(--color-text);
   font-size: clamp(24px, 1.8vw, 32px);
   line-height: 1;
   letter-spacing: 0;
   overflow-wrap: anywhere;
+}
+
+.metric-icon {
+  width: 58px;
+  height: 58px;
+  justify-self: end;
+  object-fit: contain;
 }
 
 .metric-danger {

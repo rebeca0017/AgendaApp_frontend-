@@ -1,0 +1,215 @@
+@media (max-width: 1200px) {
+  .app-layout {
+    grid-template-columns: 56px minmax(0, 1fr);
+  }
+
+  .app-shell {
+    width: min(100% - 12px, 100%);
+    margin: 0 0 0 8px;
+    padding-top: 12px;
+  }
+
+  .sidebar {
+    position: sticky;
+    top: 12px;
+    z-index: 10;
+    width: 56px;
+    height: calc(100vh - 24px);
+    min-height: 420px;
+    max-height: calc(100vh - 24px);
+    align-self: start;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: 12px;
+    padding: 8px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    transition: width 180ms ease, box-shadow 180ms ease;
+  }
+
+  .sidebar:hover,
+  .sidebar:has(:focus-visible) {
+    width: min(240px, calc(100vw - 24px));
+    box-shadow: 8px 0 24px rgb(38 27 68 / 22%);
+  }
+
+  .sidebar-profile {
+    display: grid;
+    grid-row: 1;
+    max-height: 0;
+    opacity: 0;
+    transform: translateX(-8px);
+    overflow: hidden;
+    transition: max-height 180ms ease, opacity 180ms ease, transform 180ms ease;
+    pointer-events: none;
+  }
+
+  .sidebar:hover .sidebar-profile,
+  .sidebar:has(:focus-visible) .sidebar-profile {
+    max-height: 190px;
+    opacity: 1;
+    transform: translateX(0);
+    margin-bottom: 4px;
+    pointer-events: auto;
+  }
+
+  .sidebar:hover .sidebar-avatar,
+  .sidebar:has(:focus-visible) .sidebar-avatar {
+    width: 64px;
+    height: 64px;
+    font-size: 26px;
+  }
+
+  .sidebar:hover .sidebar-profile strong,
+  .sidebar:has(:focus-visible) .sidebar-profile strong {
+    font-size: 18px;
+  }
+
+  .sidebar:hover .sidebar-profile span,
+  .sidebar:has(:focus-visible) .sidebar-profile span {
+    font-size: 13px;
+  }
+
+  .tabs,
+  .sidebar-actions {
+    display: grid;
+    align-content: start;
+    gap: 8px;
+    overflow: hidden;
+    padding: 0;
+  }
+
+  .tabs {
+    grid-row: 2;
+  }
+
+  .sidebar-actions {
+    grid-row: 3;
+    align-self: end;
+    border-top: 1px solid var(--color-sidebar-active);
+    padding-top: 8px;
+  }
+
+  .tabs button,
+  .sidebar-action {
+    width: 40px;
+    height: 40px;
+    min-height: 40px;
+    max-height: 40px;
+    gap: 10px;
+    padding: 6px;
+    font-size: 13px;
+    justify-content: start;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  .sidebar:hover .tabs button,
+  .sidebar:has(:focus-visible) .tabs button,
+  .sidebar:hover .sidebar-action,
+  .sidebar:has(:focus-visible) .sidebar-action {
+    width: 100%;
+    padding: 6px 10px;
+  }
+
+  .nav-marker {
+    width: 26px;
+    height: 26px;
+  }
+
+  .nav-marker img {
+    width: 22px;
+    height: 22px;
+  }
+
+  .topbar,
+  .agenda-layout,
+  .two-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar {
+    padding: 20px;
+  }
+
+  .topbar h1 {
+    font-size: 30px;
+  }
+
+  .topbar-image {
+    justify-self: start;
+    width: 132px;
+    height: 146px;
+  }
+
+  .topbar-side {
+    justify-items: start;
+  }
+
+  .metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+}
+
+@media (max-width: 640px) {
+  .app-layout {
+    grid-template-columns: 52px minmax(0, 1fr);
+  }
+
+  .app-shell {
+    width: min(100% - 10px, 100%);
+    margin-left: 6px;
+    padding-top: 8px;
+  }
+
+  .sidebar {
+    width: 52px;
+    padding: 6px;
+  }
+
+  .tabs button,
+  .sidebar-action {
+    width: 40px;
+  }
+}
+
+@media (max-height: 620px) and (min-width: 1201px) {
+  .sidebar {
+    gap: 14px;
+    padding: 18px;
+  }
+
+  .sidebar-avatar {
+    width: 64px;
+    height: 64px;
+    font-size: 28px;
+  }
+
+  .sidebar-profile strong {
+    font-size: 18px;
+  }
+
+  .sidebar-profile span {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 560px) {
+  .metrics,
+  .form-grid,
+  .tabs,
+  .sidebar-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .span-2 {
+    grid-column: span 1;
+  }
+}
+@media (max-width: 720px) {
+  .appointment-dates.simple,
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
